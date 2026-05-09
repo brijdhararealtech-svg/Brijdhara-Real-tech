@@ -1,0 +1,132 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ---------------------------------------------------------
+    // 0. Global Safety Net
+    // ---------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Admin lookup - assuming an 'admins' collection exists with UID as doc ID
+    // Also including owner email as a hardcoded admin for ease of setup
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == "brijdhararealtech@gmail.com"
+      );
+    }
+
+    // ---------------------------------------------------------
+    // Enquiry Validation
+    // ---------------------------------------------------------
+    function isValidEnquiry(data) {
+      return data.keys().hasAll(['name', 'email', 'phone', 'project', 'createdAt'])
+        && data.keys().size() == 5
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 100
+        && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 20
+        && data.project is string && data.project.size() >= 2 && data.project.size() <= 100
+        && data.createdAt == request.time;
+    }
+
+    // ---------------------------------------------------------
+    // Subscriber Validation
+    // ---------------------------------------------------------
+    function isValidSubscriber(data) {
+      return data.keys().hasAll(['email', 'createdAt'])
+        && data.keys().size() == 2
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 100
+        && data.createdAt == request.time;
+    }
+
+    // ---------------------------------------------------------
+    // User Validation
+    // ---------------------------------------------------------
+    function isValidUser(data) {
+      return data.keys().hasAll(['displayName', 'email', 'photoURL', 'createdAt'])
+        && data.keys().size() == 4
+        && data.displayName is string && data.displayName.size() <= 100
+        && data.email is string && data.email == request.auth.token.email
+        && data.createdAt == request.time;
+    }
+
+    // ---------------------------------------------------------
+    // Booking Validation
+    // ---------------------------------------------------------
+    function isValidBooking(data) {
+      return data.keys().hasAll(['userId', 'userName', 'userEmail', 'projectName', 'date', 'time', 'status', 'createdAt'])
+        && data.keys().size() == 8
+        && data.userId == request.auth.uid
+        && data.userName is string && data.userName.size() <= 100
+        && data.userEmail is string && data.userEmail.size() <= 100
+        && data.projectName is string && data.projectName.size() <= 100
+        && data.date is string && data.date.size() == 10
+        && data.time is string && data.time.size() <= 50
+        && data.status in ['pending', 'confirmed', 'completed', 'cancelled']
+        && data.createdAt == request.time;
+    }
+
+    // ---------------------------------------------------------
+    // Collection Match Blocks
+    // ---------------------------------------------------------
+    
+    // Enquiries: Anyone can submit, only admins can view
+    match /enquiries/{enquiryId} {
+      allow create: if isValidEnquiry(incoming());
+      allow get, list, update, delete: if isAdmin();
+    }
+
+    // Subscribers: Anyone can submit, only admins can view
+    match /subscribers/{subscriberId} {
+      allow create: if isValidSubscriber(incoming());
+      allow get, list, update, delete: if isAdmin();
+    }
+
+    // Users: Users can manage their own profile
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
+      allow update: if isSignedIn() && request.auth.uid == userId 
+        && isValidUser(incoming()) 
+        && incoming().email == existing().email 
+        && incoming().createdAt == existing().createdAt;
+      allow list, delete: if isAdmin();
+    }
+
+    // Bookings: Users can create and view their own bookings
+    match /bookings/{bookingId} {
+      allow create: if isSignedIn() && isValidId(bookingId) && isValidBooking(incoming());
+      allow get, list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAdmin() 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status'])
+        && (incoming().status == 'confirmed' || incoming().status == 'declined' || incoming().status == 'pending');
+      allow delete: if isAdmin();
+    }
+
+    // Admin collection: No one can modify except manually in console
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && request.auth.uid == adminId;
+      allow list, create, update, delete: if false;
+    }
+  }
+}

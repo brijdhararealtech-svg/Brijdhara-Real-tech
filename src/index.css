@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Montserrat", sans-serif;
+  
+  --color-brand-green: #0d2c25;
+  --color-brand-blue: #0a192f;
+  --color-brand-gold: #c5a059;
+  --color-brand-champagne: #f7e7ce;
+  
+  --color-brand-charcoal: var(--color-brand-blue);
+  --color-brand-surface: #112240;
+  --color-brand-outline: #233554;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-blue text-white font-sans selection:bg-brand-gold selection:text-black;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold;
+  }
+}
+
+.blueprint-grid {
+  background-image: 
+    linear-gradient(to right, rgba(197, 160, 89, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(197, 160, 89, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.sun-ray {
+  background: radial-gradient(circle at 20% 30%, rgba(247, 231, 206, 0.15) 0%, transparent 50%);
+  animation: pulse-ray 10s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-ray {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.1); }
+}
+
+.text-stroke {
+  -webkit-text-stroke: 1px var(--color-brand-gold);
+  color: transparent;
+}
+
+.gold-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.gold-sweep::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(247, 231, 206, 0.3), transparent);
+  transition: 0.8s;
+}
+
+.gold-sweep:hover::after {
+  left: 100%;
+}
+

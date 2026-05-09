@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "Enquiry": {
+      "title": "Enquiry",
+      "description": "A contact enquiry from a potential customer",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The full name of the lead"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the lead"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the lead"
+        },
+        "project": {
+          "type": "string",
+          "description": "The project the lead is interested in"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the enquiry was created"
+        }
+      },
+      "required": ["name", "email", "phone", "project", "createdAt"]
+    },
+    "Subscriber": {
+      "title": "Subscriber",
+      "description": "A user subscribed to the newsletter",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the subscriber"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the subscription was created"
+        }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A registered user profile",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName", "email", "createdAt"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A scheduled site visit or appointment",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string", "format": "email" },
+        "projectName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userName", "userEmail", "projectName", "date", "time", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "enquiries": {
+      "schema": { "$ref": "entities/Enquiry" },
+      "description": "Collection of lead enquiries"
+    },
+    "subscribers": {
+      "schema": { "$ref": "entities/Subscriber" },
+      "description": "Collection of newsletter subscribers"
+    },
+    "users": {
+      "schema": { "$ref": "entities/User" },
+      "description": "User profiles"
+    },
+    "bookings": {
+      "schema": { "$ref": "entities/Booking" },
+      "description": "Appointment bookings"
+    }
+  }
+}
