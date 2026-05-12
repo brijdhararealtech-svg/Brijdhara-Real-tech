@@ -21,7 +21,7 @@ export const IMAGES = {
     brijTown: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
     brijGreen: "https://images.unsplash.com/photo-1524813685445-3e1a3bb6b90d?auto=format&fit=crop&q=80"
   },
-  director: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80"
+  director: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80"
 };
 
 export const PROJECTS = [
