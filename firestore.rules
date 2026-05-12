@@ -31,11 +31,11 @@ service cloud.firestore {
     // Also including owner email as a hardcoded admin for ease of setup
     function isAdmin() {
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
         request.auth.token.email == "brijdhararealtech@gmail.com" ||
         request.auth.token.email == "brijvaasrealtech@gmail.com" ||
         request.auth.token.email == "brijdhara@gmai.com" ||
-        request.auth.token.email == "brijdhara@gmail.com"
+        request.auth.token.email == "brijdhara@gmail.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
 
@@ -85,30 +85,25 @@ service cloud.firestore {
     
     match /enquiries/{enquiryId} {
       allow create: if true;
-      allow get, list, update, delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     match /subscribers/{subscriberId} {
       allow create: if true;
-      allow get, list, update, delete: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
 
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
-      allow list, delete: if isAdmin();
+      allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
     }
 
     match /bookings/{bookingId} {
-      allow create: if isSignedIn();
-      allow get, list: if isSignedIn();
-      allow update: if isSignedIn();
+      allow create, read, update: if isSignedIn();
       allow delete: if isAdmin();
     }
 
-    // Admin collection: No one can modify except manually in console
     match /admins/{adminId} {
       allow get: if isSignedIn() && request.auth.uid == adminId;
-      allow list, create, update, delete: if false;
     }
   }
 }

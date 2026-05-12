@@ -1026,7 +1026,11 @@ const MyBookings = () => {
       setError(null);
     }, (err: any) => {
       console.error("Failed to fetch bookings:", err);
-      setError(err.message || "Failed to load appointments.");
+      try {
+        handleFirestoreError(err, OperationType.LIST, "bookings");
+      } catch (formattedError: any) {
+        setError(formattedError.message);
+      }
       setLoading(false);
     });
 
@@ -1049,6 +1053,9 @@ const MyBookings = () => {
         setEnquiries(sorted);
       }, (err: any) => {
         console.error("Failed to fetch enquiries:", err);
+        try {
+          handleFirestoreError(err, OperationType.LIST, "enquiries");
+        } catch (e) {}
       });
     }
 

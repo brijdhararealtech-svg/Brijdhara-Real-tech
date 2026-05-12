@@ -45,6 +45,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch (error) {
           console.error("User profile sync failed:", error);
+          try {
+            const { handleFirestoreError, OperationType } = await import('./firebase');
+            handleFirestoreError(error, OperationType.WRITE, `users/${firebaseUser.uid}`);
+          } catch (e) {}
         }
       }
       setUser(firebaseUser);
