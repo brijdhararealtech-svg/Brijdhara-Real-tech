@@ -23,14 +23,11 @@ import {
   Award,
   Filter,
   Menu,
-  X,
-  Volume2,
-  VolumeX
+  X
 } from "lucide-react";
 import { BRAND, IMAGES, PROJECTS } from "./constants";
 import { Logo } from "./components/Logo";
 import { AnimatePresence } from "motion/react";
-import { startBoostedAudio } from "./lib/audio";
 import { db, handleFirestoreError, OperationType } from "./lib/firebase";
 import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc } from "firebase/firestore";
 import { useAuth } from "./lib/auth";
@@ -277,25 +274,6 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }
 };
 
 const FloatingActions = () => {
-  useEffect(() => {
-    const playAudio = () => {
-      startBoostedAudio()?.then(() => {
-        window.removeEventListener("click", playAudio);
-        window.removeEventListener("touchstart", playAudio);
-      }).catch(err => {
-        console.warn("Audio waiting for user gesture:", err);
-      });
-    };
-
-    window.addEventListener("click", playAudio);
-    window.addEventListener("touchstart", playAudio);
-
-    return () => {
-      window.removeEventListener("click", playAudio);
-      window.removeEventListener("touchstart", playAudio);
-    };
-  }, []);
-
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
       <motion.a
