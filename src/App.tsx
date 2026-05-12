@@ -960,6 +960,7 @@ const MyBookings = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeFilter, setActiveFilter] = useState("pending"); // pending, confirmed, all, enquiries
   const [activeTab, setActiveTab] = useState("visits"); // visits, enquiries
@@ -984,19 +985,33 @@ const MyBookings = () => {
 
   useEffect(() => {
     if (!user) return;
+    setError(null);
 
     // Fetch Bookings
     const bookingsRef = collection(db, "bookings");
     const bookingsQuery = isAdmin 
-      ? query(bookingsRef, orderBy("createdAt", "desc"))
-      : query(bookingsRef, where("userId", "==", user.uid), orderBy("createdAt", "desc"));
+      ? query(bookingsRef)
+      : query(bookingsRef, where("userId", "==", user.uid));
 
     const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setBookings(docs);
+      // Robust manual sort for Timestamps
+      const sorted = docs.sort((a: any, b: any) => {
+        const getTs = (val: any) => {
+          if (!val) return 0;
+          if (typeof val.toMillis === 'function') return val.toMillis();
+          if (val.seconds) return val.seconds * 1000;
+          if (val instanceof Date) return val.getTime();
+          return 0;
+        };
+        return getTs(b.createdAt) - getTs(a.createdAt);
+      });
+      setBookings(sorted);
       setLoading(false);
-    }, (error) => {
-      console.error("Failed to fetch bookings:", error);
+      setError(null);
+    }, (err: any) => {
+      console.error("Failed to fetch bookings:", err);
+      setError(err.message || "Failed to load appointments.");
       setLoading(false);
     });
 
@@ -1004,10 +1019,21 @@ const MyBookings = () => {
     let unsubscribeEnquiries = () => {};
     if (isAdmin) {
       const enquiriesRef = collection(db, "enquiries");
-      const enquiriesQuery = query(enquiriesRef, orderBy("createdAt", "desc"));
-      unsubscribeEnquiries = onSnapshot(enquiriesQuery, (snapshot) => {
+      unsubscribeEnquiries = onSnapshot(query(enquiriesRef), (snapshot) => {
         const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setEnquiries(docs);
+        const sorted = docs.sort((a: any, b: any) => {
+          const getTs = (val: any) => {
+            if (!val) return 0;
+            if (typeof val.toMillis === 'function') return val.toMillis();
+            if (val.seconds) return val.seconds * 1000;
+            if (val instanceof Date) return val.getTime();
+            return 0;
+          };
+          return getTs(b.createdAt) - getTs(a.createdAt);
+        });
+        setEnquiries(sorted);
+      }, (err: any) => {
+        console.error("Failed to fetch enquiries:", err);
       });
     }
 
@@ -1045,20 +1071,40 @@ const MyBookings = () => {
               {isAdmin ? "CONTROL" : "MY"} <span className="text-stroke">CENTER</span>
             </h2>
           </div>
+          
+          {error && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm max-w-md">
+              <p className="font-bold mb-1">Issue Detected:</p>
+              <p className="opacity-80">{error}</p>
+              {error.includes("index") && (
+                <p className="mt-2 text-xs">
+                  This usually means a Firebase index is building. It will be ready in a few minutes.
+                </p>
+              )}
+            </div>
+          )}
           {isAdmin && (
-            <div className="flex gap-4 p-1 bg-white/5 border border-white/10 rounded-none">
-               <button 
-                onClick={() => setActiveTab("visits")}
-                className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "visits" ? "bg-brand-gold text-brand-blue" : "text-white/40 hover:text-white"}`}
-              >
-                Visits
-              </button>
-              <button 
-                onClick={() => setActiveTab("enquiries")}
-                className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "enquiries" ? "bg-brand-gold text-brand-blue" : "text-white/40 hover:text-white"}`}
-              >
-                Enquiries
-              </button>
+            <div className="flex flex-col gap-4 items-end">
+              {window.location.hostname !== 'localhost' && !window.location.hostname.includes('asia-east1.run.app') && (
+                <div className="text-[10px] text-brand-gold/40 border border-brand-gold/20 p-3 bg-white/5 mb-2 max-w-xs text-right">
+                  <p className="font-bold flex items-center justify-end gap-2 mb-1 uppercase tracking-widest"><Shield size={10} /> Authentication Policy</p>
+                  <p>Remember to authorize <span className="text-white">{window.location.hostname}</span> in your Firebase Console.</p>
+                </div>
+              )}
+              <div className="flex gap-4 p-1 bg-white/5 border border-white/10 rounded-none">
+                 <button 
+                  onClick={() => setActiveTab("visits")}
+                  className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "visits" ? "bg-brand-gold text-brand-blue" : "text-white/40 hover:text-white"}`}
+                >
+                  Visits
+                </button>
+                <button 
+                  onClick={() => setActiveTab("enquiries")}
+                  className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "enquiries" ? "bg-brand-gold text-brand-blue" : "text-white/40 hover:text-white"}`}
+                >
+                  Enquiries
+                </button>
+              </div>
             </div>
           )}
         </div>
