@@ -969,7 +969,8 @@ const MyBookings = () => {
     if (!user) return;
 
     const checkAdmin = async () => {
-      if (user.email === "brijdhararealtech@gmail.com") {
+      const adminEmails = ["brijdhararealtech@gmail.com", "brijvaasrealtech@gmail.com"];
+      if (adminEmails.includes(user.email || "")) {
         setIsAdmin(true);
         return;
       }
@@ -1075,16 +1076,33 @@ const MyBookings = () => {
           {error && (
             <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm max-w-md">
               <p className="font-bold mb-1">Issue Detected:</p>
-              <p className="opacity-80">{error}</p>
-              {error.includes("index") && (
-                <p className="mt-2 text-xs">
-                  This usually means a Firebase index is building. It will be ready in a few minutes.
-                </p>
+              <p className="opacity-80 break-words">{error}</p>
+              <div className="mt-2 text-[10px] space-y-1 opacity-60">
+                <p>Status: {user ? 'Authenticated' : 'Guest'}</p>
+                <p>Role: {isAdmin ? 'Administrator' : 'Investor'}</p>
+                <p>Local Registry: {bookings.length} visit records found</p>
+              </div>
+              {error.includes("permission") && (
+                <div className="mt-2 text-xs space-y-1">
+                  <p>• Verify you are logged in as <span className="text-white">brijdhararealtech@gmail.com</span>.</p>
+                  <p>• Rules loosened. If error persists, force refresh the page.</p>
+                </div>
               )}
             </div>
           )}
           {isAdmin && (
             <div className="flex flex-col gap-4 items-end">
+              <button 
+                onClick={() => {
+                  setLoading(true);
+                  setError("Manual re-sync initiated...");
+                  setTimeout(() => window.location.reload(), 100);
+                }}
+                className="text-[8px] text-white/40 hover:text-white uppercase tracking-widest flex items-center gap-2 border border-white/10 px-3 py-1 mb-2"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
+                Force System Refresh
+              </button>
               {window.location.hostname !== 'localhost' && !window.location.hostname.includes('asia-east1.run.app') && (
                 <div className="text-[10px] text-brand-gold/40 border border-brand-gold/20 p-3 bg-white/5 mb-2 max-w-xs text-right">
                   <p className="font-bold flex items-center justify-end gap-2 mb-1 uppercase tracking-widest"><Shield size={10} /> Authentication Policy</p>
@@ -1240,7 +1258,9 @@ const MyBookings = () => {
                           <div className="text-xs uppercase font-black tracking-widest text-brand-gold/70">{enq.project}</div>
                         </td>
                         <td className="py-6 text-[10px] text-white/20 font-mono">
-                          {enq.createdAt?.toDate().toLocaleDateString('en-IN')}
+                          {enq.createdAt && typeof enq.createdAt.toDate === 'function' 
+                            ? enq.createdAt.toDate().toLocaleDateString('en-IN') 
+                            : 'Pending...'}
                         </td>
                       </tr>
                     ))}

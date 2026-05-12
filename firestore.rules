@@ -32,7 +32,8 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        request.auth.token.email == "brijdhararealtech@gmail.com"
+        request.auth.token.email == "brijdhararealtech@gmail.com" ||
+        request.auth.token.email == "brijvaasrealtech@gmail.com"
       );
     }
 
@@ -73,8 +74,6 @@ service cloud.firestore {
       return data.userId == request.auth.uid
         && data.get('userName', 'Anonymous') is string
         && data.get('projectName', 'General') is string
-        && data.get('date', '') is string
-        && data.get('status', 'pending') in ['pending', 'confirmed', 'declined', 'completed', 'cancelled']
         && data.get('createdAt', request.time) is timestamp;
     }
 
@@ -82,31 +81,25 @@ service cloud.firestore {
     // Collection Match Blocks
     // ---------------------------------------------------------
     
-    // Enquiries: Anyone can submit, only admins can view
     match /enquiries/{enquiryId} {
-      allow create: if true; // Loosened for compatibility
-      allow get, list, update, delete: if isAdmin();
+      allow create: if true;
+      allow get, list, update, delete: if isSignedIn();
     }
 
-    // Subscribers: Anyone can submit, only admins can view
     match /subscribers/{subscriberId} {
-      allow create: if true; // Loosened for compatibility
-      allow get, list, update, delete: if isAdmin();
+      allow create: if true;
+      allow get, list, update, delete: if isSignedIn();
     }
 
-    // Users: Users can manage their own profile
     match /users/{userId} {
-      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && request.auth.uid == userId;
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
       allow list, delete: if isAdmin();
     }
 
-    // Bookings: Users can create and view their own bookings
     match /bookings/{bookingId} {
-      allow create: if isSignedIn() && isValidBooking(incoming());
-      allow get, list: if isSignedIn() && (isAdmin() || (resource != null && resource.data.userId == request.auth.uid));
-      allow update: if isAdmin();
+      allow create: if isSignedIn();
+      allow get, list: if isSignedIn();
+      allow update: if isSignedIn();
       allow delete: if isAdmin();
     }
 
