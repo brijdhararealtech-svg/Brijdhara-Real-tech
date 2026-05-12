@@ -69,7 +69,7 @@ export const Logo: React.FC<LogoProps> = ({ className, light = false }) => {
       <text x="300" y="335" textAnchor="middle" fill={greenColor} fontFamily="cursive, serif" italic="true" fontSize="20">A land of your dream home</text>
       
       {/* Company Name Gold */}
-      <text x="300" y="380" textAnchor="middle" fill={goldColor} fontFamily="sans-serif" fontWeight="900" fontSize="32" letterSpacing="4">BRIJ DHARA REALTECH (P) LTD.</text>
+      <text x="300" y="380" textAnchor="middle" fill={goldColor} fontFamily="sans-serif" fontWeight="900" fontSize="32" letterSpacing="4">BRIJ DHARA REALTECH (PVT) LTD</text>
     </svg>
   );
 };

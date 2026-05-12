@@ -1,6 +1,6 @@
 export const BRAND = {
   name: "BRIJ DHARA",
-  legalName: "Brij Dhara Realtech (P) Ltd.",
+  legalName: "BRIJ DHARA REALTECH (PVT) LTD",
   tagline: "A LAND OF YOUR DREAM HOME",
   yearsOfTrust: 11,
   contact: {

@@ -47,6 +47,32 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [copyStatus, setCopyStatus] = useState("Copy Domain");
+
+  const getErrorMessage = (err: any) => {
+    const projectId = "brij-dhara";
+    switch (err.code) {
+      case 'auth/operation-not-allowed':
+        return `AUTHENTICATION_REQUIRED: Sign-in providers are currently disabled in your Firebase Core.`;
+      case 'auth/unauthorized-domain':
+        return `DOMAIN_AUTHORIZATION_REQUIRED: The current environment (${window.location.hostname}) is not yet whitelisted in your Firebase Security Cloud.`;
+      case 'auth/popup-closed-by-user':
+        return "Process interrupted by user. Please re-initiate.";
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return "Credential mismatch. Access denied.";
+      default:
+        return `${err.message || "Encryption error."} (Code: ${err.code})`;
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(window.location.hostname);
+    setCopyStatus("Copied!");
+    setTimeout(() => setCopyStatus("Copy Domain"), 2000);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -59,7 +85,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }
       }
       onClose();
     } catch (err: any) {
-      setError(err.message || "Authentication failed. Please check your credentials.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -67,11 +93,12 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    setError("");
     try {
       await signInWithGoogle();
       onClose();
-    } catch (err) {
-      setError("Google sign-in failed.");
+    } catch (err: any) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -128,8 +155,51 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold p-4 mb-8 text-center uppercase tracking-widest">
-            {error}
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-black p-4 mb-4 text-center uppercase tracking-[0.2em] relative overflow-hidden group">
+            <div className="blueprint-grid absolute inset-0 opacity-10 pointer-events-none" />
+            <span className="relative z-10">{error}</span>
+          </div>
+        )}
+
+        {(error.includes("REQUIRED") || error.includes("authorized")) && (
+          <div className="bg-brand-surface border border-brand-gold/20 p-6 mb-8 relative">
+            <div className="absolute -top-3 left-6 bg-brand-gold text-brand-blue px-3 py-1 text-[8px] font-black uppercase tracking-widest">
+              Security Protocol
+            </div>
+            
+            <div className="space-y-4">
+              <div className="p-3 bg-white/5 border border-white/10 flex items-center justify-between">
+                <div>
+                  <div className="text-[8px] text-brand-gold/50 uppercase font-black tracking-widest mb-1">Current Domain</div>
+                  <div className="text-[10px] text-white font-mono">{window.location.hostname}</div>
+                </div>
+                <button 
+                  onClick={copyToClipboard}
+                  className="bg-brand-gold/10 hover:bg-brand-gold/20 text-brand-gold text-[8px] font-black uppercase tracking-widest px-3 py-2 transition-all border border-brand-gold/20"
+                >
+                  {copyStatus}
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-white text-[10px] font-black uppercase tracking-widest">Initialization Steps:</h4>
+                <ol className="text-white/40 text-[9px] space-y-2 list-decimal ml-4 uppercase tracking-tighter">
+                  <li>Access <span className="text-brand-gold">Firebase Console</span> for project <span className="text-white">brij-dhara</span></li>
+                  <li>Go to <span className="text-white">Authentication</span> &gt; <span className="text-white">Settings</span> &gt; <span className="text-white">Authorized Domains</span></li>
+                  <li>Click <span className="text-brand-gold">Add Domain</span> and paste the copied domain above</li>
+                  <li>Ensure <span className="text-brand-gold">Google</span> and <span className="text-brand-gold">Email/Password</span> are active in <span className="text-white">Sign-in method</span></li>
+                </ol>
+              </div>
+
+              <a 
+                href="https://console.firebase.google.com/project/brij-dhara/authentication/settings" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block w-full text-center py-3 bg-brand-gold text-brand-blue text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl"
+              >
+                Access Firebase Console →
+              </a>
+            </div>
           </div>
         )}
 
@@ -350,45 +420,59 @@ const Navbar = () => {
             ))}
 
             {user ? (
-              <div className="relative">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 hover:bg-white/10 transition-all"
-                >
-                  <img src={user.photoURL || ""} alt={user.displayName || ""} className="w-6 h-6 rounded-full border border-brand-gold/30" />
-                  <span className="text-white">{user.displayName?.split(' ')[0]}</span>
-                </motion.button>
-                <AnimatePresence>
-                  {isUserMenuOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-48 bg-brand-surface border border-brand-gold/20 shadow-2xl p-2 z-50"
-                    >
-                      <button 
-                        onClick={() => {
-                          setIsUserMenuOpen(false);
-                          const bookingsSection = document.getElementById('my-bookings');
-                          if (bookingsSection) bookingsSection.scrollIntoView({ behavior: 'smooth' });
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-brand-gold hover:text-brand-blue transition-colors flex items-center gap-2"
+              <div className="flex items-center gap-4">
+                {user.email === "brijdhararealtech@gmail.com" && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={() => {
+                      const bookingsSection = document.getElementById('my-bookings');
+                      if (bookingsSection) bookingsSection.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="hidden lg:flex items-center gap-2 bg-brand-gold text-brand-blue px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-lg"
+                  >
+                    <ShieldCheck size={14} /> Admin Hub
+                  </motion.button>
+                )}
+                <div className="relative">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 hover:bg-white/10 transition-all font-black text-[10px] tracking-widest"
+                  >
+                    <img src={user.photoURL || ""} alt={user.displayName || ""} className="w-6 h-6 rounded-full border border-brand-gold/30" />
+                    <span className="text-white uppercase">{user.displayName?.split(' ')[0]}</span>
+                  </motion.button>
+                  <AnimatePresence>
+                    {isUserMenuOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute right-0 mt-2 w-48 bg-brand-surface border border-brand-gold/20 shadow-2xl p-2 z-50 text-[10px] font-black uppercase tracking-widest"
                       >
-                        <Calendar size={14} /> My Bookings
-                      </button>
-                      <button 
-                        onClick={() => {
-                          logout();
-                          setIsUserMenuOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors flex items-center gap-2"
-                      >
-                        <LogOut size={14} /> Sign Out
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        <button 
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            const bookingsSection = document.getElementById('my-bookings');
+                            if (bookingsSection) bookingsSection.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-brand-gold hover:text-brand-blue transition-colors flex items-center gap-2"
+                        >
+                          <Calendar size={14} /> {user.email === "brijdhararealtech@gmail.com" ? "All Visits" : "My Visits"}
+                        </button>
+                        <button 
+                          onClick={() => {
+                            logout();
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors flex items-center gap-2 border-t border-white/5"
+                        >
+                          <LogOut size={14} /> Sign Out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-4">
@@ -896,8 +980,11 @@ const Timeline = () => {
 const MyBookings = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<any[]>([]);
+  const [enquiries, setEnquiries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("pending"); // pending, confirmed, all, enquiries
+  const [activeTab, setActiveTab] = useState("visits"); // visits, enquiries
 
   useEffect(() => {
     if (!user) return;
@@ -920,12 +1007,13 @@ const MyBookings = () => {
   useEffect(() => {
     if (!user) return;
 
+    // Fetch Bookings
     const bookingsRef = collection(db, "bookings");
-    const q = isAdmin 
+    const bookingsQuery = isAdmin 
       ? query(bookingsRef, orderBy("createdAt", "desc"))
       : query(bookingsRef, where("userId", "==", user.uid), orderBy("createdAt", "desc"));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setBookings(docs);
       setLoading(false);
@@ -934,7 +1022,21 @@ const MyBookings = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Fetch Enquiries for Admins
+    let unsubscribeEnquiries = () => {};
+    if (isAdmin) {
+      const enquiriesRef = collection(db, "enquiries");
+      const enquiriesQuery = query(enquiriesRef, orderBy("createdAt", "desc"));
+      unsubscribeEnquiries = onSnapshot(enquiriesQuery, (snapshot) => {
+        const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setEnquiries(docs);
+      });
+    }
+
+    return () => {
+      unsubscribeBookings();
+      unsubscribeEnquiries();
+    };
   }, [user, isAdmin]);
 
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
@@ -945,6 +1047,11 @@ const MyBookings = () => {
       console.error("Failed to update booking status:", error);
     }
   };
+
+  const filteredBookings = bookings.filter(b => {
+    if (activeFilter === "all") return true;
+    return b.status === activeFilter;
+  });
 
   if (!user) return null;
 
@@ -957,100 +1064,173 @@ const MyBookings = () => {
               {isAdmin ? "Central Management" : "Personal Dashboard"}
             </span>
             <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tighter leading-tight">
-              {isAdmin ? "ALL" : "MY"} <span className="text-stroke">BOOKINGS</span>
+              {isAdmin ? "CONTROL" : "MY"} <span className="text-stroke">CENTER</span>
             </h2>
           </div>
           {isAdmin && (
-            <div className="bg-brand-gold text-brand-blue px-4 py-2 text-[10px] font-black uppercase tracking-widest">
-              Administrator Access
+            <div className="flex gap-4 p-1 bg-white/5 border border-white/10 rounded-none">
+               <button 
+                onClick={() => setActiveTab("visits")}
+                className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "visits" ? "bg-brand-gold text-brand-blue" : "text-white/40 hover:text-white"}`}
+              >
+                Visits
+              </button>
+              <button 
+                onClick={() => setActiveTab("enquiries")}
+                className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === "enquiries" ? "bg-brand-gold text-brand-blue" : "text-white/40 hover:text-white"}`}
+              >
+                Enquiries
+              </button>
             </div>
           )}
         </div>
 
-        {loading ? (
-          <div className="h-64 flex items-center justify-center text-white/20">Loading your history...</div>
-        ) : bookings.length === 0 ? (
-          <div className="bg-brand-surface border border-white/5 p-12 text-center">
-            <Calendar size={48} className="mx-auto text-white/10 mb-6" />
-            <p className="text-brand-champagne/40">You haven't scheduled any site visits yet.</p>
-            <button 
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-              className="mt-6 text-brand-gold font-black uppercase tracking-[0.2em] text-[10px] hover:text-white transition-colors"
-            >
-              Book Your First Visit
-            </button>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {bookings.map((booking) => (
-              <motion.div 
-                key={booking.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-brand-surface border border-brand-gold/20 p-8 relative isolate overflow-hidden group"
-              >
-                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
-                  <CheckCircle2 size={100} className="text-brand-gold" />
-                </div>
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    {isAdmin && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <UserIcon size={10} className="text-brand-gold" />
-                        <span className="text-white text-[8px] font-bold uppercase tracking-widest">{booking.userName}</span>
-                      </div>
-                    )}
-                    <span className="text-brand-gold uppercase text-[10px] tracking-[0.3em] font-black block mb-1">Appointment</span>
-                    <h3 className="text-xl font-bold text-white tracking-tight">{booking.projectName}</h3>
-                  </div>
-                  <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 border shadow-xl ${
-                    booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
-                    booking.status === 'declined' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 
-                    booking.status === 'pending' ? 'bg-brand-gold/20 text-brand-gold border-brand-gold/30' : 
-                    'bg-white/5 text-white/40 border-white/10'
-                  }`}>
-                    {booking.status}
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-brand-champagne/60">
-                    <Calendar size={14} className="text-brand-gold" />
-                    <span className="text-sm">{new Date(booking.date).toLocaleDateString('en-IN', { dateStyle: 'long' })}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-brand-champagne/60">
-                    <Clock size={14} className="text-brand-gold" />
-                    <span className="text-sm">{booking.time}</span>
-                  </div>
-                </div>
-                <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-                  <div className="text-[10px] text-white/20 font-mono">
-                    REF: {booking.id.slice(0, 8).toUpperCase()}
-                  </div>
-                  {isAdmin && booking.status === 'pending' && (
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => updateBookingStatus(booking.id, 'confirmed')}
-                        className="bg-green-500/20 hover:bg-green-500/40 text-green-400 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 transition-colors"
-                      >
-                        Accept
-                      </button>
-                      <button 
-                         onClick={() => updateBookingStatus(booking.id, 'declined')}
-                        className="bg-red-500/20 hover:bg-red-500/40 text-red-400 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 transition-colors"
-                      >
-                        Decline
-                      </button>
+        {activeTab === "visits" ? (
+          <>
+            <div className="flex flex-wrap gap-2 mb-8">
+              {["pending", "confirmed", "declined", "all"].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFilter(f)}
+                  className={`px-5 py-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all border ${
+                    activeFilter === f 
+                    ? "bg-brand-gold text-brand-blue border-brand-gold" 
+                    : "bg-transparent text-white/40 border-white/10 hover:border-brand-gold/40 hover:text-white"
+                  }`}
+                >
+                  {f} {isAdmin ? `(${bookings.filter(b => f === 'all' ? true : b.status === f).length})` : ''}
+                </button>
+              ))}
+            </div>
+
+            {loading ? (
+              <div className="h-64 flex items-center justify-center text-white/20">Syncing architectural data...</div>
+            ) : filteredBookings.length === 0 ? (
+              <div className="bg-brand-surface border border-white/5 p-12 text-center">
+                <Calendar size={48} className="mx-auto text-white/10 mb-6" />
+                <p className="text-brand-champagne/40">No visits found in this category.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredBookings.map((booking) => (
+                  <motion.div 
+                    key={booking.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-brand-surface border border-brand-gold/20 p-8 relative isolate overflow-hidden group"
+                  >
+                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
+                      <CheckCircle2 size={100} className="text-brand-gold" />
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="max-w-[70%]">
+                        {isAdmin && (
+                          <div className="flex items-center gap-2 mb-2">
+                            <UserIcon size={10} className="text-brand-gold" />
+                            <span className="text-white text-[8px] font-bold uppercase tracking-widest truncate">{booking.userName}</span>
+                          </div>
+                        )}
+                        <span className="text-brand-gold uppercase text-[10px] tracking-[0.3em] font-black block mb-1">Appointment</span>
+                        <h3 className="text-xl font-bold text-white tracking-tight">{booking.projectName}</h3>
+                      </div>
+                      <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 border shadow-xl ${
+                        booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
+                        booking.status === 'declined' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 
+                        booking.status === 'pending' ? 'bg-brand-gold/20 text-brand-gold border-brand-gold/30' : 
+                        'bg-white/5 text-white/40 border-white/10'
+                      }`}>
+                        {booking.status}
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 text-brand-champagne/60">
+                        <Calendar size={14} className="text-brand-gold" />
+                        <span className="text-sm">{new Date(booking.date).toLocaleDateString('en-IN', { dateStyle: 'long' })}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-brand-champagne/60">
+                        <Clock size={14} className="text-brand-gold" />
+                        <span className="text-sm">{booking.time}</span>
+                      </div>
+                      {isAdmin && booking.userEmail && (
+                        <div className="flex items-center gap-3 text-brand-champagne/40">
+                          <Mail size={14} className="text-brand-gold/50" />
+                          <span className="text-xs italic">{booking.userEmail}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                      <div className="text-[10px] text-white/20 font-mono">
+                        REF: {booking.id.slice(0, 8).toUpperCase()}
+                      </div>
+                      {isAdmin && booking.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                            className="bg-green-500/20 hover:bg-green-500/40 text-green-400 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 transition-colors"
+                          >
+                            Accept
+                          </button>
+                          <button 
+                             onClick={() => updateBookingStatus(booking.id, 'declined')}
+                            className="bg-red-500/20 hover:bg-red-500/40 text-red-400 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 transition-colors"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="space-y-6">
+            {enquiries.length === 0 ? (
+               <div className="bg-brand-surface border border-white/5 p-12 text-center">
+                <MessageSquare size={48} className="mx-auto text-white/10 mb-6" />
+                <p className="text-brand-champagne/40">No general enquiries received.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-brand-gold/10">
+                      <th className="py-4 text-[10px] font-black uppercase tracking-widest text-brand-gold">Investor</th>
+                      <th className="py-4 text-[10px] font-black uppercase tracking-widest text-brand-gold">Contact</th>
+                      <th className="py-4 text-[10px] font-black uppercase tracking-widest text-brand-gold">Asset</th>
+                      <th className="py-4 text-[10px] font-black uppercase tracking-widest text-brand-gold">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {enquiries.map((enq) => (
+                      <tr key={enq.id} className="hover:bg-white/5 transition-colors">
+                        <td className="py-6">
+                          <div className="font-bold text-white">{enq.name}</div>
+                        </td>
+                        <td className="py-6">
+                          <div className="text-brand-champagne/60 text-xs">{enq.email}</div>
+                          <div className="text-brand-champagne/40 text-xs font-mono">{enq.phone}</div>
+                        </td>
+                        <td className="py-6">
+                          <div className="text-xs uppercase font-black tracking-widest text-brand-gold/70">{enq.project}</div>
+                        </td>
+                        <td className="py-6 text-[10px] text-white/20 font-mono">
+                          {enq.createdAt?.toDate().toLocaleDateString('en-IN')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>
     </section>
   );
 };
+
 
 const ContactForm = () => {
   const { user } = useAuth();
