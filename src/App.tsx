@@ -978,20 +978,32 @@ const MyBookings = () => {
     if (!user) return;
 
     const checkAdmin = async () => {
+      if (!user?.email) {
+        setIsAdmin(false);
+        return;
+      }
+
       const adminEmails = [
         "brijdhararealtech@gmail.com", 
         "brijvaasrealtech@gmail.com",
-        "brijdhara@gmai.com",
         "brijdhara@gmail.com"
       ];
-      if (adminEmails.includes(user.email || "")) {
+      
+      const emailMatch = adminEmails.some(email => 
+        user.email?.toLowerCase() === email.toLowerCase()
+      );
+      
+      if (emailMatch) {
+        console.log("Admin email recognized:", user.email);
         setIsAdmin(true);
         return;
       }
+      
       try {
         const adminDoc = await getDoc(doc(db, "admins", user.uid));
         setIsAdmin(adminDoc.exists());
       } catch (e) {
+        console.error("Admin DB check failed:", e);
         setIsAdmin(false);
       }
     };
@@ -1001,6 +1013,7 @@ const MyBookings = () => {
   useEffect(() => {
     if (!user) return;
     setError(null);
+    console.log("Setting up listeners. isAdmin:", isAdmin);
 
     // Fetch Bookings
     const bookingsRef = collection(db, "bookings");
@@ -1008,7 +1021,9 @@ const MyBookings = () => {
       ? query(bookingsRef)
       : query(bookingsRef, where("userId", "==", user.uid));
 
+    console.log("Subscribing to bookings with query. IsAdmin fetch:", isAdmin);
     const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
+      console.log("Bookings fetched, count:", snapshot.size);
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       // Robust manual sort for Timestamps
       const sorted = docs.sort((a: any, b: any) => {
@@ -1026,6 +1041,17 @@ const MyBookings = () => {
       setError(null);
     }, (err: any) => {
       console.error("Failed to fetch bookings:", err);
+      // If broad query fails, fallback to filtered query
+      if (isAdmin && err.code === 'permission-denied') {
+        const filteredQuery = query(bookingsRef, where("userId", "==", user.uid));
+        onSnapshot(filteredQuery, (snapshot) => {
+          const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setBookings(docs);
+          setLoading(false);
+          setError(null);
+        });
+        return;
+      }
       try {
         handleFirestoreError(err, OperationType.LIST, "bookings");
       } catch (formattedError: any) {
@@ -1051,11 +1077,17 @@ const MyBookings = () => {
           return getTs(b.createdAt) - getTs(a.createdAt);
         });
         setEnquiries(sorted);
+        setError(null);
       }, (err: any) => {
         console.error("Failed to fetch enquiries:", err);
+        if (err.code === 'permission-denied') {
+          console.warn("Permission denied for broad enquiries fetch. Retrying with admin status check...");
+        }
         try {
           handleFirestoreError(err, OperationType.LIST, "enquiries");
-        } catch (e) {}
+        } catch (e: any) {
+          setError(e.message);
+        }
       });
     }
 

@@ -9,7 +9,7 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------
-    // Helpers
+    // Primitives & Helpers
     // ---------------------------------------------------------
     function isSignedIn() {
       return request.auth != null;
@@ -24,86 +24,94 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128;
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    // Admin lookup - assuming an 'admins' collection exists with UID as doc ID
-    // Also including owner email as a hardcoded admin for ease of setup
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == "brijdhararealtech@gmail.com" ||
-        request.auth.token.email == "brijvaasrealtech@gmail.com" ||
-        request.auth.token.email == "brijdhara@gmai.com" ||
-        request.auth.token.email == "brijdhara@gmail.com" ||
+        request.auth.token.email.lower() in [
+          "brijdhararealtech@gmail.com",
+          "brijvaasrealtech@gmail.com",
+          "brijdhara@gmail.com"
+        ] ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
 
-    // ---------------------------------------------------------
-    // Enquiry Validation
-    // ---------------------------------------------------------
-    function isValidEnquiry(data) {
-      return data.keys().hasAll(['name', 'email', 'phone', 'project', 'createdAt'])
-        && data.name is string && data.name.size() >= 2
-        && data.email is string
-        && data.phone is string
-        && data.project is string
-        && data.createdAt is timestamp;
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     // ---------------------------------------------------------
-    // Subscriber Validation
+    // Validation Blueprints
     // ---------------------------------------------------------
-    function isValidSubscriber(data) {
-      return data.keys().hasAll(['email', 'createdAt'])
-        && data.email is string
-        && data.createdAt is timestamp;
-    }
 
-    // ---------------------------------------------------------
-    // User Validation
-    // ---------------------------------------------------------
     function isValidUser(data) {
-      return data.get('displayName', 'Anonymous') is string
-        && data.get('email', '') is string
-        && data.get('createdAt', request.time) is timestamp;
+      return data.keys().hasAll(['displayName', 'email']) &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.email is string && data.email.size() <= 100;
     }
 
-    // ---------------------------------------------------------
-    // Booking Validation
-    // ---------------------------------------------------------
     function isValidBooking(data) {
-      return data.userId == request.auth.uid
-        && data.get('userName', 'Anonymous') is string
-        && data.get('projectName', 'General') is string
-        && data.get('createdAt', request.time) is timestamp;
+      return data.keys().hasAll(['userId', 'userName', 'userEmail', 'projectName', 'date', 'time', 'status', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.userName is string && data.userName.size() <= 100 &&
+             data.userEmail is string && data.userEmail.size() <= 100 &&
+             data.projectName is string &&
+             data.status in ['pending', 'confirmed', 'completed', 'cancelled'] &&
+             data.createdAt == request.time;
+    }
+
+    function isValidEnquiry(data) {
+      return data.keys().hasAll(['name', 'email', 'phone', 'project', 'createdAt']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 100 &&
+             data.phone is string && data.phone.size() <= 20 &&
+             data.project is string &&
+             data.createdAt == request.time;
     }
 
     // ---------------------------------------------------------
     // Collection Match Blocks
     // ---------------------------------------------------------
-    
-    match /enquiries/{enquiryId} {
-      allow create: if true;
-      allow read, write: if isSignedIn();
-    }
-
-    match /subscribers/{subscriberId} {
-      allow create: if true;
-      allow read, write: if isSignedIn();
-    }
 
     match /users/{userId} {
-      allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-    }
-
-    match /bookings/{bookingId} {
-      allow create, read, update: if isSignedIn();
+      allow get: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId) && isValidUser(incoming());
       allow delete: if isAdmin();
     }
 
+    match /bookings/{bookingId} {
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn() && isValidBooking(incoming()) && incoming().status == 'pending';
+      
+      allow update: if isSignedIn() && (
+        // Admin can update anything
+        isAdmin() ||
+        // User can only update if they own it AND only specific fields (like cancel)
+        (isOwner(existing().userId) && 
+         isValidBooking(incoming()) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+         incoming().status == 'cancelled')
+      );
+      
+      allow delete: if isAdmin();
+    }
+
+    match /enquiries/{enquiryId} {
+      allow create: if isValidEnquiry(incoming());
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /subscribers/{subscriberId} {
+      allow create: if incoming().keys().hasAll(['email', 'createdAt']) && incoming().email is string;
+      allow read, update, delete: if isAdmin();
+    }
+
     match /admins/{adminId} {
-      allow get: if isSignedIn() && request.auth.uid == adminId;
+      allow get: if isOwner(adminId) || isAdmin();
     }
   }
 }

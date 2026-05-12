@@ -1,10 +1,10 @@
 {
-  "projectId": "brij-dhara",
-  "appId": "1:15264646544:web:05581f88190cda6c4cdf15",
-  "apiKey": "AIzaSyBoqSdaDVXUEtF9bvoqOyyjAJRtb8Gdwfo",
-  "authDomain": "brij-dhara.firebaseapp.com",
-  "firestoreDatabaseId": "(default)",
-  "storageBucket": "brij-dhara.firebasestorage.app",
-  "messagingSenderId": "15264646544",
+  "projectId": "gen-lang-client-0340179637",
+  "appId": "1:16508480605:web:ea5249ccc89532fec471b4",
+  "apiKey": "AIzaSyBktQR3aY7PuIS-PlxApJONWMLyQIfLIOU",
+  "authDomain": "gen-lang-client-0340179637.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-c13b449a-56d3-4edf-bb10-11761fdda0b6",
+  "storageBucket": "gen-lang-client-0340179637.firebasestorage.app",
+  "messagingSenderId": "16508480605",
   "measurementId": ""
 }

@@ -1,11 +1,16 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, doc, getDocFromServer, getDoc } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import firebaseConfig from "../../firebase-applet-config.json";
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Use explicit database ID from config if present
+const dbId = (firebaseConfig as any).firestoreDatabaseId;
+export const db = (dbId && dbId !== '(default)') 
+  ? getFirestore(app, dbId) 
+  : getFirestore(app);
 
 // Core error handler for Firestore operations
 export enum OperationType {
@@ -53,29 +58,4 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   }
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
-}
-
-// Validate connection to Firestore on boot
-async function testConnection() {
-  try {
-    // Attempting to read a non-existent document to test connectivity
-    // Using default getDoc (which might hit cache) to be less aggressive than getDocFromServer
-    // during initial cold starts.
-    await getDoc(doc(db, 'system', 'connection_test'));
-    console.log("Firebase connection established.");
-  } catch (error: any) {
-    // Ignore permission-denied as it means we DID reach the server
-    if (error?.code === 'permission-denied') {
-        console.log("Firebase network reachable (permissions verified).");
-        return;
-    }
-    
-    // Log reachability issues but don't treat them as fatal config errors immediately
-    // unless they persist. Firestore handles reconnection automatically.
-    console.log("Firestore is currently in offline mode (initial sync pending).");
-  }
-}
-
-if (typeof window !== 'undefined') {
-  testConnection();
 }

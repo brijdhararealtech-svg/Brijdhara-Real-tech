@@ -29,30 +29,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+
       if (firebaseUser) {
-        try {
-          // Sync user profile to Firestore
-          const userRef = doc(db, 'users', firebaseUser.uid);
-          const userSnap = await getDoc(userRef);
-          
-          if (!userSnap.exists()) {
+        // Run sync in backround to not block the UI
+        (async () => {
+          try {
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            console.log("Syncing profile for:", firebaseUser.email, "UID:", firebaseUser.uid);
+            
             await setDoc(userRef, {
               displayName: firebaseUser.displayName || 'Anonymous',
               email: firebaseUser.email,
               photoURL: firebaseUser.photoURL || '',
-              createdAt: serverTimestamp(),
-            });
+              lastLogin: serverTimestamp(),
+            }, { merge: true });
+            
+            console.log("User profile sync successful");
+          } catch (error) {
+            console.error("User profile sync failed:", error);
+            try {
+              const { handleFirestoreError, OperationType } = await import('./firebase');
+              const errInfo = {
+                error: error instanceof Error ? error.message : String(error),
+                operationType: OperationType.WRITE,
+                path: `users/${firebaseUser.uid}`
+              };
+              console.error("Sync Error Details:", JSON.stringify(errInfo));
+            } catch (e) {}
           }
-        } catch (error) {
-          console.error("User profile sync failed:", error);
-          try {
-            const { handleFirestoreError, OperationType } = await import('./firebase');
-            handleFirestoreError(error, OperationType.WRITE, `users/${firebaseUser.uid}`);
-          } catch (e) {}
-        }
+        })();
       }
-      setUser(firebaseUser);
-      setLoading(false);
     });
 
     return () => unsubscribe();
