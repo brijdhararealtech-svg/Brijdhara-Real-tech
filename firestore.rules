@@ -33,7 +33,9 @@ service cloud.firestore {
       return isSignedIn() && (
         exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
         request.auth.token.email == "brijdhararealtech@gmail.com" ||
-        request.auth.token.email == "brijvaasrealtech@gmail.com"
+        request.auth.token.email == "brijvaasrealtech@gmail.com" ||
+        request.auth.token.email == "brijdhara@gmai.com" ||
+        request.auth.token.email == "brijdhara@gmail.com"
       );
     }
 

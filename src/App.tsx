@@ -969,7 +969,12 @@ const MyBookings = () => {
     if (!user) return;
 
     const checkAdmin = async () => {
-      const adminEmails = ["brijdhararealtech@gmail.com", "brijvaasrealtech@gmail.com"];
+      const adminEmails = [
+        "brijdhararealtech@gmail.com", 
+        "brijvaasrealtech@gmail.com",
+        "brijdhara@gmai.com",
+        "brijdhara@gmail.com"
+      ];
       if (adminEmails.includes(user.email || "")) {
         setIsAdmin(true);
         return;
