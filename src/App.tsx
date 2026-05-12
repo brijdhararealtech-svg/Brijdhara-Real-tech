@@ -23,7 +23,8 @@ import {
   Award,
   Filter,
   Menu,
-  X
+  X,
+  Shield
 } from "lucide-react";
 import { BRAND, IMAGES, PROJECTS } from "./constants";
 import { Logo } from "./components/Logo";
@@ -399,7 +400,7 @@ const Navbar = () => {
 
             {user ? (
               <div className="flex items-center gap-4">
-                {user.email === "brijdhararealtech@gmail.com" && (
+                {["brijdhararealtech@gmail.com", "brijvaasrealtech@gmail.com", "brijdhara@gmai.com", "brijdhara@gmail.com"].includes(user.email || "") && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={() => {
@@ -618,14 +619,22 @@ const Hero = () => {
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-6">
             <button 
+              onClick={() => {
+                const contactSection = document.getElementById('contact');
+                if (contactSection) contactSection.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="gold-sweep group bg-brand-gold text-brand-blue px-10 py-4 font-bold tracking-widest text-sm flex items-center gap-3 transition-transform hover:scale-105 active:scale-95"
             >
-              EXPLORE LEGACY <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              BOOK SITE VISIT <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
             <button 
+              onClick={() => {
+                const contactSection = document.getElementById('contact');
+                if (contactSection) contactSection.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="border border-brand-gold/30 text-white px-10 py-4 font-bold tracking-widest text-sm hover:bg-white hover:text-brand-blue transition-all active:scale-95"
             >
-              VIEW BROCHURE
+              ENQUIRE NOW
             </button>
           </div>
         </motion.div>
@@ -1650,25 +1659,9 @@ const Footer = () => {
 
 // --- Main App ---
 
-const BackgroundVideo = () => {
-  return (
-    <video 
-      className="fixed top-1/2 -translate-y-1/2 right-[15%] w-[45vw] min-w-[400px] h-auto -z-10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-none object-cover opacity-60" 
-      autoPlay 
-      loop 
-      muted 
-      playsInline
-    >
-      <source src="make_rahda_krishnaji_rotating.mp4" type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-  );
-};
-
 export default function App() {
   return (
     <div className="bg-brand-blue min-h-screen text-white font-sans selection:bg-brand-gold selection:text-brand-blue">
-      <BackgroundVideo />
       <Navbar />
       <FloatingActions />
       <main>
