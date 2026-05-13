@@ -17,10 +17,10 @@ export const IMAGES = {
   atrium: "https://images.unsplash.com/photo-1486406146926-c627a92fb1ab?auto=format&fit=crop&q=80",
   map: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3nmyJfCceuBlIFDYMpBlrcpdH6Hb7tkTD-GD82GkB7bmPlRu-uHQs4epwOVeEdsu4J_Ycvvy41qb5hJuk7aeHHvTUoJ5fG_nVjeWyPrv1fMilAIGF6LYTICzEdJjG0LSs8gtl2oOiU5Vw9T9Bvzj64h3KEFMOdZ5kFoRO2mSiHplhiTmfKsofvMIDuSWLw1wk6h5CrDanj39vad0qQxPGCpnBopKkELC33zNZdBuO4t6AW3xgYMdJP0hQ0tFaZZz5ZUigQcYPT3Pz",
   projects: {
-    kanhaKunj: "https://images.unsplash.com/photo-1616038242814-a6eac7845d88?auto=format&fit=crop&q=80",
-    hetvikPlaza: "https://images.unsplash.com/photo-1590066304602-4f7e0c9f36a3?auto=format&fit=crop&q=80",
-    brijTown: "https://images.unsplash.com/photo-1590060248439-01ea4e1122a6?auto=format&fit=crop&q=80",
-    brijGreen: "https://images.unsplash.com/photo-1621509623863-718663806fb6?auto=format&fit=crop&q=80"
+    kanhaKunj: "input_file_0.png",
+    hetvikPlaza: "input_file_1.png",
+    brijTown: "input_file_2.png",
+    brijGreen: "input_file_0.png"
   },
   director: "/director.jpg"
 };
