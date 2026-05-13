@@ -586,12 +586,16 @@ const Hero = () => {
         transition={{ duration: 1.5 }}
         className="absolute inset-0 z-0"
       >
-        <img 
-          src={IMAGES.hero} 
-          alt="Luxury Architecture" 
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline
           className="w-full h-full object-cover opacity-60 transition-all duration-1000"
-          referrerPolicy="no-referrer"
-        />
+          poster={IMAGES.hero}
+        >
+          <source src={IMAGES.heroVideo} type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-t from-brand-blue via-transparent to-brand-blue/60" />
       </motion.div>
 
@@ -1716,12 +1720,12 @@ export default function App() {
             </span>
           </div>
 
-          <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-24 items-center">
+          <div className="max-w-7xl mx-auto px-6">
             <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="space-y-8"
+              className="space-y-12 text-center max-w-3xl mx-auto"
             >
               <div>
                 <span className="text-brand-gold font-bold tracking-[0.3em] text-xs block mb-4 uppercase">Leadership & Vision</span>
@@ -1730,11 +1734,11 @@ export default function App() {
                   <span className="text-brand-gold italic font-light">Cinematic Futures</span>
                 </h2>
               </div>
-              <div className="w-24 h-px bg-brand-gold/40" />
-              <p className="text-brand-champagne/60 text-lg leading-relaxed max-w-lg">
+              <div className="w-24 h-px bg-brand-gold/40 mx-auto" />
+              <p className="text-brand-champagne/60 text-lg leading-relaxed mx-auto">
                 Under the strategic leadership of Dheeraj K. Saini, BRIJ DHARA merges structural precision with the emotive beauty of golden-hour aesthetics to create high-yield township masterpieces.
               </p>
-              <div className="flex items-center gap-10 pt-4">
+              <div className="flex items-center justify-center gap-10 pt-4">
                 <div>
                   <div className="text-4xl font-bold text-white mb-1">500+</div>
                   <div className="text-brand-gold/60 text-[10px] uppercase tracking-widest font-bold">Acres Developed</div>
@@ -1746,36 +1750,6 @@ export default function App() {
                 </div>
               </div>
             </motion.div>
-
-            <div className="relative">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -10 }}
-                className="relative z-10 group cursor-pointer"
-              >
-                <div className="aspect-[4/5] overflow-hidden border border-brand-gold/20 shadow-2xl relative">
-                  <motion.img 
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    src={IMAGES.director} 
-                    alt="Dheeraj K. Saini - Managing Director" 
-                    className="w-full h-full object-cover transition-all duration-1000" 
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-blue to-transparent opacity-60" />
-                </div>
-                
-                <div className="absolute bottom-0 left-0 right-0 bg-brand-surface/90 backdrop-blur-xl p-8 border-t border-brand-gold/30 transform transition-transform group-hover:translate-x-2">
-                  <h4 className="text-2xl font-bold text-white mb-1">Dheeraj K. Saini</h4>
-                  <p className="text-brand-gold font-black tracking-[0.2em] text-xs uppercase">Director - Brijdhara Group</p>
-                </div>
-              </motion.div>
-              
-              <div className="absolute -top-12 -right-12 w-80 h-80 border border-brand-gold/10 z-0 animate-pulse pointer-events-none" />
-              <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-brand-gold/5 blur-3xl z-0 pointer-events-none" />
-            </div>
           </div>
         </section>
 

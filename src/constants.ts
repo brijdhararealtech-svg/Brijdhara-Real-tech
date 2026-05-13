@@ -13,6 +13,7 @@ export const BRAND = {
 export const IMAGES = {
   logo: "/logo.png",
   hero: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80",
+  heroVideo: "/hero.mp4",
   atrium: "https://images.unsplash.com/photo-1486406146926-c627a92fb1ab?auto=format&fit=crop&q=80",
   map: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3nmyJfCceuBlIFDYMpBlrcpdH6Hb7tkTD-GD82GkB7bmPlRu-uHQs4epwOVeEdsu4J_Ycvvy41qb5hJuk7aeHHvTUoJ5fG_nVjeWyPrv1fMilAIGF6LYTICzEdJjG0LSs8gtl2oOiU5Vw9T9Bvzj64h3KEFMOdZ5kFoRO2mSiHplhiTmfKsofvMIDuSWLw1wk6h5CrDanj39vad0qQxPGCpnBopKkELC33zNZdBuO4t6AW3xgYMdJP0hQ0tFaZZz5ZUigQcYPT3Pz",
   projects: {
@@ -21,7 +22,7 @@ export const IMAGES = {
     brijTown: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
     brijGreen: "https://images.unsplash.com/photo-1524813685445-3e1a3bb6b90d?auto=format&fit=crop&q=80"
   },
-  director: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80"
+  director: "/director.jpg"
 };
 
 export const PROJECTS = [
