@@ -32,8 +32,10 @@
 }
 
 .sun-ray {
-  background: radial-gradient(circle at 20% 30%, rgba(247, 231, 206, 0.15) 0%, transparent 50%);
-  animation: pulse-ray 10s ease-in-out infinite alternate;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(197, 160, 89, 0.2) 0%, transparent 60%),
+    radial-gradient(circle at 80% 20%, rgba(247, 231, 206, 0.1) 0%, transparent 40%);
+  animation: pulse-ray 8s ease-in-out infinite alternate;
 }
 
 @keyframes pulse-ray {
